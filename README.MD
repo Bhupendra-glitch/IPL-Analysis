@@ -1,3 +1,4 @@
+![alt text](image-1.png)
 # 📊 Telco Customer Churn Classification
 ### Customer Segmentation & Retention Analysis using Machine Learning
 
