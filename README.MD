@@ -238,6 +238,8 @@ It helps analyze:
 - Matplotlib
 - Seaborn
 - Jupyter Notebook
+- EDA
+- Plotly
 
 ---
 
