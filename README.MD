@@ -238,6 +238,8 @@ It helps analyze:
 - Matplotlib
 - Seaborn
 - Jupyter Notebook
+- EDA
+- Plotly
 
 ---
 
@@ -247,6 +249,6 @@ This project demonstrates how **data analysis techniques can be applied to sport
 
 The project highlights the power of **data-driven decision making in sports**.
 
----
+----
 
 ⭐ If you like this project, feel free to **star the repository**.
