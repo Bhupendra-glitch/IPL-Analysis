@@ -5,16 +5,15 @@ from utils import load_data
 
 st.title("🤖 ML Predictions")
 
-matches, _ = load_data()
-
+matches, _ = load_data("E:\Py3\End-to-End-ML-with-Deployment\matches.csv")
 data = matches[['team1', 'team2', 'winner']].dropna()
 
 data = pd.get_dummies(data)
 
-X = data.drop('winner', axis=1)
-y = data['winner']
+x = data.drop('Winner', axis=1)
+y = data['Winner']
 
 model = RandomForestClassifier()
-model.fit(X, y)
+model.fit(x, y)
 
 st.success("Model trained successfully ✅")

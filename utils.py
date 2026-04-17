@@ -3,8 +3,8 @@ import streamlit as st
 
 @st.cache_data
 def load_data():
-    matches = pd.read_csv("data/matches.csv")
-    deliveries = pd.read_csv("data/deliveries.csv")
+    matches = pd.read_csv("E:\Py3\End-to-End-ML-with-Deployment\matches.csv")
+    deliveries = pd.read_csv("E:\Py3\End-to-End-ML-with-Deployment\deliveries.csv")
     return matches, deliveries
 
 def get_teams(matches):
