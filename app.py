@@ -5,7 +5,11 @@ try:
     import plotly.express as px
 except ImportError:
     px = None
-from sklearn.ensemble import RandomForestClassifier
+
+try:
+    from sklearn.ensemble import RandomForestClassifier
+except ImportError:
+    RandomForestClassifier = None
 
 BASE_DIR = Path(__file__).resolve().parent
 

@@ -1,7 +1,12 @@
-# Show logged-in user
-st.sidebar.success(f"👤 {st.session_state['user']}")
+import streamlit as st
 
-# Logout button
-if st.sidebar.button("Logout"):
-    del st.session_state["user"]
-    st.rerun()
+user = st.session_state.get("user")
+
+if user:
+    st.sidebar.success(f"👤 {user}")
+
+    if st.sidebar.button("Logout"):
+        del st.session_state["user"]
+        st.experimental_rerun()
+else:
+    st.sidebar.info("Not logged in")
