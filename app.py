@@ -49,8 +49,65 @@ page = st.sidebar.radio("Navigate", [
 
 # ---------------- HOME ----------------
 if page == "🏠 Home":
-    st.title("🏏 IPL Data Analysis")
-    st.write("Welcome to IPL Dashboard 🚀")
+    st.title("🏏 IPL Data Analysis Dashboard")
+    st.markdown("""
+    ## Welcome to the Comprehensive IPL Analytics Platform 🚀
+
+    This interactive dashboard provides in-depth analysis of Indian Premier League (IPL) cricket data, offering insights into team performances, player statistics, match predictions, and more. Built with modern data science techniques and machine learning models, this platform serves as a complete toolkit for cricket enthusiasts, analysts, and fantasy sports players.
+
+    ### 🎯 Key Features
+
+    **📊 Data Exploration**
+    - Comprehensive dataset of IPL matches from 2008-2022
+    - Ball-by-ball delivery data for granular analysis
+    - Interactive visualizations and charts
+
+    **🏏 Team & Player Analysis**
+    - Detailed team performance metrics and trends
+    - Individual player statistics (batting, bowling, fielding)
+    - Head-to-head comparisons between teams and players
+
+    **🤖 Machine Learning Predictions**
+    - Match winner prediction using advanced ML models
+    - Score prediction for ongoing matches
+    - Live match predictor with real-time updates
+
+    **📈 Advanced Analytics**
+    - Exploratory Data Analysis (EDA) with interactive dashboards
+    - Venue-wise performance analysis
+    - Season trends and historical patterns
+    - Fantasy team optimization suggestions
+
+    **⚡ Performance Insights**
+    - Batting and bowling performance metrics
+    - Strike rates, averages, and economy analysis
+    - Top performers across different categories
+
+    ### 📋 Dataset Overview
+    """)
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric("Total Matches", len(matches))
+        st.metric("Total Teams", len(matches['team1'].unique()))
+    with col2:
+        st.metric("Total Deliveries", f"{len(deliveries):,}")
+        st.metric("Seasons Covered", len(matches['season'].unique()))
+
+    st.markdown("""
+    ### 🛠️ Technology Stack
+    - **Frontend**: Streamlit for interactive web interface
+    - **Data Processing**: Pandas, NumPy for data manipulation
+    - **Visualization**: Plotly, Streamlit charts for interactive plots
+    - **Machine Learning**: Scikit-learn for predictive modeling
+    - **Deployment**: Ready for cloud deployment on Azure, AWS, or GCP
+
+    ### 🎮 How to Use
+    Navigate through the sidebar to explore different analysis modules. Each page offers interactive filters and visualizations to customize your analysis. Use the ML Predictions section for match outcome forecasting and fantasy team suggestions.
+
+    ---
+    *Built with ❤️ for cricket analytics | Data source: Kaggle IPL Dataset*
+    """)
 
 # ---------------- OVERVIEW ----------------
 elif page == "📊 Overview":
