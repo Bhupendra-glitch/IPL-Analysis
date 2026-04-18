@@ -1,7 +1,13 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
+from pathlib import Path
+try:
+    import plotly.express as px
+except ImportError:
+    px = None
 from sklearn.ensemble import RandomForestClassifier
+
+BASE_DIR = Path(__file__).resolve().parent
 
 
 # If user not logged in
@@ -28,8 +34,8 @@ st.set_page_config(page_title="IPL Analysis", layout="wide")
 # ---------------- LOAD DATA ----------------
 @st.cache_data
 def load_data():
-    matches = pd.read_csv("E:\Py3\End-to-End-ML-with-Deployment\matches.csv")
-    deliveries = pd.read_csv("E:\Py3\End-to-End-ML-with-Deployment\deliveries.csv")
+    matches = pd.read_csv(BASE_DIR / "matches.csv")
+    deliveries = pd.read_csv(BASE_DIR / "deliveries.csv")
     return matches, deliveries
 
 matches, deliveries = load_data()
@@ -77,8 +83,12 @@ elif page == "📈 EDA Dashboard":
     st.title("EDA Dashboard")
     wins = matches['winner'].value_counts().reset_index()
     wins.columns = ['Team', 'Wins']
-    fig = px.bar(wins, x='Team', y='Wins')
-    st.plotly_chart(fig)
+    if px is not None:
+        fig = px.bar(wins, x='Team', y='Wins')
+        st.plotly_chart(fig)
+    else:
+        st.warning("Plotly is not installed. Install it with `pip install plotly` to view the full chart.")
+        st.bar_chart(wins.set_index('Team'))
 
 # ---------------- TEAM ANALYSIS ----------------
 elif page == "🏏 Team Analysis":

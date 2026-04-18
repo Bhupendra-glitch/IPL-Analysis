@@ -7,7 +7,7 @@ st.set_page_config(
     layout="wide"
 )
 
-from app import load_data
+import app
 import homePage
 import exploratoryDataAnalysis
 import playerAnalysis
