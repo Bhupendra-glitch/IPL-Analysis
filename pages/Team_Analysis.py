@@ -3,7 +3,7 @@ from utils import load_data, get_teams
 
 st.title("🏏 Team Analysis")
 
-matches, _ = load_data()
+# matches, _ = load_data()
 teams = get_teams(matches)
 
 team = st.selectbox("Select Team", teams)
