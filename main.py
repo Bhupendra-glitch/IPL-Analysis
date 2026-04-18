@@ -76,7 +76,7 @@ st.markdown('<h1 class="main-header">🏏 IPL Cricket Analytics Dashboard</h1>',
 st.markdown("""
 <div style="text-align: center; font-size: 1.2rem; margin-bottom: 2rem; color: #666;">
     <strong>End-to-End Machine Learning Analysis of Indian Premier League Cricket Data</strong><br>
-    From 2008 to 2022 • Ball-by-ball insights • Predictive analytics • Fantasy sports optimization
+    From 2008 to 2024 • Ball-by-ball insights • Predictive analytics • Fantasy sports optimization
 </div>
 """, unsafe_allow_html=True)
 
@@ -251,7 +251,7 @@ with col2:
     <div style="text-align: center; color: #666;">
         <p><strong>IPL Cricket Analytics Dashboard</strong></p>
         <p>Built with ❤️ using Streamlit • Data Science for Cricket Enthusiasts</p>
-        <p>© 2024 IPL Analytics Project</p>
+        <p>© 2026 IPL Analytics Project</p>
     </div>
     """, unsafe_allow_html=True)
 
