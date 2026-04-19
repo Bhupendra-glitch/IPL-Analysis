@@ -1,4 +1,7 @@
 import streamlit as st
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from utils import load_data
 import pandas as pd
 
