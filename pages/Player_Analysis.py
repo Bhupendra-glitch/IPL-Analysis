@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import numpy as np
 from io import StringIO
 from utils import load_data
 
@@ -286,13 +287,108 @@ with tab6:
     
     player_deliveries = deliveries[deliveries['batter'] == selected_player]
     
-    # ===== PLAYING STYLE ANALYSIS =====
-    st.subheader("🎯 Playing Style Analysis")
+    # ===== PLAYER ARCHETYPE CLASSIFICATION =====
+    st.subheader("🎭 Player Archetype Classification")
     
-    p_runs = player_deliveries['batsman_runs'].sum()
-    p_balls = len(player_deliveries)
-    p_avg = p_runs / len(player_deliveries[player_deliveries['player_dismissed'] == selected_player]) if len(player_deliveries[player_deliveries['player_dismissed'] == selected_player]) > 0 else 0
-    p_sr = (p_runs / p_balls * 100) if p_balls > 0 else 0
+    # Build comprehensive player stats dictionary for all players
+    all_player_stats = {}
+    for batter in deliveries['batter'].unique():
+        batter_del = deliveries[deliveries['batter'] == batter]
+        b_runs = batter_del['batsman_runs'].sum()
+        b_balls = len(batter_del)
+        b_dismissals = len(batter_del[batter_del['player_dismissed'] == batter])
+        b_avg = b_runs / b_dismissals if b_dismissals > 0 else 0
+        b_sr = (b_runs / b_balls * 100) if b_balls > 0 else 0
+        b_matches = batter_del['match_id'].nunique()
+        
+        # Get first match and batting position in that match
+        first_match = batter_del['match_id'].min()
+        first_match_batters = deliveries[deliveries['match_id'] == first_match]['batter'].unique()
+        batting_order = list(first_match_batters).index(batter) + 1 if batter in first_match_batters else 0
+        
+        all_player_stats[batter] = {
+            'runs': b_runs,
+            'balls': b_balls,
+            'average': b_avg,
+            'sr': b_sr,
+            'matches': b_matches,
+            'batting_order': batting_order
+        }
+    
+    player_stats = all_player_stats[selected_player]
+    p_runs = player_stats['runs']
+    p_balls = player_stats['balls']
+    p_avg = player_stats['average']
+    p_sr = player_stats['sr']
+    p_matches = player_stats['matches']
+    
+    # Classify player archetype
+    def classify_player_type(stats):
+        """Classify player into different archetypes"""
+        avg_sr = np.mean([p['sr'] for p in all_player_stats.values()])
+        avg_avg = np.mean([p['average'] for p in all_player_stats.values()])
+        
+        sr = stats['sr']
+        avg = stats['average']
+        
+        if sr > avg_sr and avg > avg_avg:
+            return "🔥 Explosive All-rounder", "High strike rate & average - Best of both worlds"
+        elif sr > avg_sr and avg <= avg_avg:
+            return "⚡ Aggressive Hitter", "High strike rate but lower average - Explosive but risky"
+        elif sr <= avg_sr and avg > avg_avg:
+            return "🛡️ Anchor/Accumulator", "Reliable average but lower SR - Builds innings steadily"
+        elif sr > 100 and avg > 25:
+            return "💥 Dynamic Striker", "Balanced approach - Aggressive when required"
+        else:
+            return "🐢 Steady Consolidator", "Defensive approach - Focuses on stability"
+    
+    player_archetype, archetype_desc = classify_player_type(player_stats)
+    
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.success(f"**Archetype:**\n{player_archetype}")
+    with col2:
+        st.info(f"**Style:**\n{archetype_desc}")
+    with col3:
+        st.metric("🎯 Career Span", f"{p_matches} matches")
+    with col4:
+        st.metric("📊 Career SR", f"{p_sr:.1f}%")
+    
+    # ===== COMPARE WITH SIMILAR PLAYERS =====
+    st.subheader("🤝 Similar Player Types Analysis")
+    
+    # Find similar players based on archetype
+    similar_players = []
+    for player, stats in all_player_stats.items():
+        if player != selected_player and stats['matches'] >= 3:  # Min 3 matches
+            similar_type, _ = classify_player_type(stats)
+            if similar_type == player_archetype:
+                similar_players.append((player, stats))
+    
+    if similar_players:
+        similar_df = pd.DataFrame([
+            {
+                'Player': p[0],
+                'Runs': int(p[1]['runs']),
+                'Avg': round(p[1]['average'], 2),
+                'SR': round(p[1]['sr'], 2),
+                'Matches': int(p[1]['matches'])
+            }
+            for p in similar_players
+        ]).sort_values('Runs', ascending=False)
+        
+        st.write(f"**Players with {player_archetype} archetype:**")
+        st.dataframe(similar_df, use_container_width=True)
+        
+        # Ranking within archetype
+        similar_df_sorted = similar_df.sort_values('Runs', ascending=False)
+        player_rank = list(similar_df_sorted['Player']).index(selected_player) + 1 if selected_player in similar_df_sorted['Player'].values else 0
+        
+        if player_rank > 0:
+            st.info(f"🏆 **Ranking among {player_archetype[4:]} players:** #{player_rank} out of {len(similar_df_sorted)}")
+    
+    # ===== PLAYING STYLE ANALYSIS =====
+    st.subheader("🎯 Playing Style Deep Dive")
     
     # Determine playing style
     if p_sr > 130:
@@ -330,9 +426,10 @@ with tab6:
     col1, col2 = st.columns(2)
     
     with col1:
-        fig_dismissal = px.pie(dismissal_modes.reset_index(), values='count', names='dismissal_kind',
-                              title="Dismissal Modes Distribution")
-        st.plotly_chart(fig_dismissal, use_container_width=True)
+        if len(dismissal_modes) > 0:
+            fig_dismissal = px.pie(dismissal_modes.reset_index(), values='count', names='dismissal_kind',
+                                  title="Dismissal Modes Distribution")
+            st.plotly_chart(fig_dismissal, use_container_width=True)
     
     with col2:
         if len(dismissal_modes) > 0:
@@ -345,8 +442,9 @@ with tab6:
         # Most common dismisser
         st.subheader("👹 Most Common Dismissers")
         dismissers = player_deliveries[player_deliveries['player_dismissed'] == selected_player]['bowler'].value_counts().head(5)
-        for bowler, count in dismissers.items():
-            st.write(f"🎯 **{bowler}** - {int(count)} dismissals")
+        if len(dismissers) > 0:
+            for bowler, count in dismissers.items():
+                st.write(f"🎯 **{bowler}** - {int(count)} dismissals")
     
     # ===== SCORING PATTERNS =====
     st.subheader("📊 Scoring Patterns")
@@ -385,10 +483,11 @@ with tab6:
             '6s': runs_from_6s,
         }
         
-        fig_runs_value = px.pie(values=list(runs_sources.values()), names=list(runs_sources.keys()),
-                               title="Total Runs by Source",
-                               hole=0.3)
-        st.plotly_chart(fig_runs_value, use_container_width=True)
+        if sum(runs_sources.values()) > 0:
+            fig_runs_value = px.pie(values=list(runs_sources.values()), names=list(runs_sources.keys()),
+                                   title="Total Runs by Source",
+                                   hole=0.3)
+            st.plotly_chart(fig_runs_value, use_container_width=True)
     
     # ===== PHASE-WISE PERFORMANCE =====
     st.subheader("🔄 Phase-wise Performance (Powerplay, Middle, Death)")
@@ -473,6 +572,130 @@ with tab6:
         st.metric("🎯 Consistency Rating", f"{consistency_rating:.1f}%")
     with col5:
         st.metric("⭐ Overall Rating", f"{overall_rating:.1f}%")
+    
+    # ===== PLAYER TYPE RADAR CHART =====
+    st.subheader("🎯 Player Profile Radar Chart")
+    
+    # Normalize metrics to 0-100 scale for radar chart
+    run_norm = min(100, (p_runs / 200) * 100)
+    avg_norm = min(100, (p_avg / 50) * 100)
+    sr_norm = min(100, (p_sr / 140) * 100)
+    cons_norm = consistency_score
+    
+    # Calculate dominant shots efficiency
+    fours_count = len(player_deliveries[player_deliveries['batsman_runs'] == 4])
+    sixes_count = len(player_deliveries[player_deliveries['batsman_runs'] == 6])
+    boundary_norm = min(100, ((fours_count + sixes_count * 1.5) / (p_balls * 0.3)) * 100)
+    
+    # Create radar chart
+    categories = ['Total Runs', 'Average', 'Strike Rate', 'Consistency', 'Boundary Hitting']
+    values = [run_norm, avg_norm, sr_norm, cons_norm, boundary_norm]
+    
+    fig_radar = go.Figure(data=go.Scatterpolar(
+        r=values,
+        theta=categories,
+        fill='toself',
+        name=selected_player
+    ))
+    fig_radar.update_layout(
+        title=f"{selected_player} - Player Profile Radar",
+        height=500,
+        polar=dict(radialaxis=dict(visible=True, range=[0, 100]))
+    )
+    st.plotly_chart(fig_radar, use_container_width=True)
+    
+    # ===== PLAYER TYPE MATRIX =====
+    st.subheader("📊 All Players Type Matrix")
+    
+    # Create matrix of all players
+    matrix_data = []
+    for player, stats in all_player_stats.items():
+        if stats['matches'] >= 2:  # Only players with 2+ matches
+            matrix_data.append({
+                'Player': player,
+                'Average': stats['average'],
+                'Strike Rate': stats['sr'],
+                'Runs': stats['runs'],
+                'Matches': stats['matches']
+            })
+    
+    matrix_df = pd.DataFrame(matrix_data)
+    
+    # Create scatter plot showing all player types
+    fig_matrix = px.scatter(matrix_df, x='Strike Rate', y='Average',
+                           size='Runs', hover_name='Player',
+                           title="Player Type Matrix - Average vs Strike Rate",
+                           color='Runs', color_continuous_scale='Viridis',
+                           labels={'Strike Rate': 'Strike Rate (%)', 'Average': 'Batting Average'})
+    
+    # Highlight selected player
+    selected_player_data = matrix_df[matrix_df['Player'] == selected_player]
+    if len(selected_player_data) > 0:
+        fig_matrix.add_scatter(x=selected_player_data['Strike Rate'], 
+                              y=selected_player_data['Average'],
+                              mode='markers',
+                              marker=dict(size=15, color='red', symbol='star'),
+                              name=f'{selected_player} (Selected)',
+                              hovertext=selected_player)
+    
+    # Add quadrant lines for player type classification
+    fig_matrix.add_vline(x=np.mean(matrix_df['Strike Rate']), line_dash="dash", line_color="gray", opacity=0.5)
+    fig_matrix.add_hline(y=np.mean(matrix_df['Average']), line_dash="dash", line_color="gray", opacity=0.5)
+    
+    fig_matrix.update_layout(height=500)
+    st.plotly_chart(fig_matrix, use_container_width=True)
+    
+    # ===== PLAYER ARCHETYPE INSIGHTS =====
+    st.subheader("💡 Archetype Insights & Recommendations")
+    
+    insight_text = f"""
+    **Player Type: {player_archetype}**
+    
+    **Profile Summary:**
+    {archetype_desc}
+    
+    **Key Strengths:**
+    """
+    
+    if "Explosive" in player_archetype:
+        insight_text += """
+    - Combines aggression with reliability
+    - Consistently high scorer across conditions
+    - Valuable in pressure situations
+    """
+    elif "Aggressive" in player_archetype:
+        insight_text += """
+    - Explosive batting ability
+    - Capable of quick runs
+    - Best used in specific match situations
+    """
+    elif "Anchor" in player_archetype or "Accumulator" in player_archetype:
+        insight_text += """
+    - Builds stable innings foundation
+    - Lower dismissal rate
+    - Excellent for partnership building
+    """
+    else:
+        insight_text += """
+    - Brings stability to innings
+    - Lower risk approach
+    - Good team player
+    """
+    
+    insight_text += f"""
+    
+    **Match Impact:**
+    - Consistency Score: {consistency_score:.1f}% (Higher is better)
+    - Aggression Index: {p_sr:.1f}% (League avg: {np.mean(matrix_df['Strike Rate']):.1f}%)
+    - Reliability Index: {p_avg:.2f} (League avg: {np.mean(matrix_df['Average']):.2f})
+    
+    **Strengths in Different Phases:**
+    - Powerplay Specialist: {'✅ Yes' if phase_stats[phase_stats['Phase'] == 'Powerplay (1-6)']['Strike Rate'].values[0] > 120 if len(phase_stats[phase_stats['Phase'] == 'Powerplay (1-6)']) > 0 else 'N/A'}
+    - Middle Overs Anchor: {'✅ Yes' if phase_stats[phase_stats['Phase'] == 'Middle Overs (7-16)']['Strike Rate'].values[0] > 100 if len(phase_stats[phase_stats['Phase'] == 'Middle Overs (7-16)']) > 0 else 'N/A'}
+    - Finisher: {'✅ Yes' if phase_stats[phase_stats['Phase'] == 'Death Overs (17-20)']['Strike Rate'].values[0] > 130 if len(phase_stats[phase_stats['Phase'] == 'Death Overs (17-20)']) > 0 else 'N/A'}
+    """
+    
+    st.info(insight_text)
 
 # ==================== COMPARISON WITH OTHERS ====================
 st.divider()
