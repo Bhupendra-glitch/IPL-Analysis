@@ -16,7 +16,7 @@ all_batsmen = sorted(deliveries['batter'].unique())
 selected_player = st.sidebar.selectbox("Select Player", all_batsmen)
 
 # Create tabs for different analyses
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 Profile", "📈 Career Stats", "🎯 Form Analysis", "📍 Venue Analysis", "🤝 Partnerships"])
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["📊 Profile", "📈 Career Stats", "🎯 Form Analysis", "📍 Venue Analysis", "🤝 Partnerships", "🔍 Player Profile"])
 
 # ==================== PLAYER PROFILE ====================
 with tab1:
@@ -279,6 +279,200 @@ with tab5:
     if len(best_partnerships) > 0:
         for idx, row in best_partnerships.iterrows():
             st.success(f"🤝 **{selected_player}** & **{row['Partner']}** - {int(row['Runs Together'])} runs in {int(row['Deliveries'])} deliveries (Avg: {row['Average Per Delivery']:.2f})")
+
+# ==================== DETAILED PLAYER PROFILE ANALYSIS ====================
+with tab6:
+    st.header(f"🔍 {selected_player} - Detailed Player Profile")
+    
+    player_deliveries = deliveries[deliveries['batter'] == selected_player]
+    
+    # ===== PLAYING STYLE ANALYSIS =====
+    st.subheader("🎯 Playing Style Analysis")
+    
+    p_runs = player_deliveries['batsman_runs'].sum()
+    p_balls = len(player_deliveries)
+    p_avg = p_runs / len(player_deliveries[player_deliveries['player_dismissed'] == selected_player]) if len(player_deliveries[player_deliveries['player_dismissed'] == selected_player]) > 0 else 0
+    p_sr = (p_runs / p_balls * 100) if p_balls > 0 else 0
+    
+    # Determine playing style
+    if p_sr > 130:
+        playing_style = "🔥 Aggressive - Plays shots freely, high strike rate"
+    elif p_sr > 110:
+        playing_style = "⚡ Dynamic - Balanced aggressive-defensive approach"
+    elif p_sr > 90:
+        playing_style = "🛡️ Composed - Steady accumulator with selective attacking"
+    else:
+        playing_style = "🐢 Defensive - Plays for stability, accumulates runs slowly"
+    
+    # Consistency metric
+    innings_runs = player_deliveries.groupby('match_id')['batsman_runs'].sum()
+    consistency_score = (100 - (innings_runs.std() / innings_runs.mean() * 100)) if innings_runs.mean() > 0 else 0
+    consistency_score = max(0, min(100, consistency_score))
+    
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.info(f"""
+        **Playing Style**
+        {playing_style}
+        """)
+    with col2:
+        st.metric("🎯 Consistency Score", f"{consistency_score:.1f}%")
+    with col3:
+        st.metric("⚡ Aggression Index", f"{p_sr:.1f}")
+    with col4:
+        st.metric("🎪 Reliability Index", f"{p_avg:.2f}")
+    
+    # ===== DISMISSAL ANALYSIS =====
+    st.subheader("📉 Dismissal Analysis")
+    
+    dismissal_modes = player_deliveries[player_deliveries['player_dismissed'] == selected_player]['dismissal_kind'].value_counts()
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        fig_dismissal = px.pie(dismissal_modes.reset_index(), values='count', names='dismissal_kind',
+                              title="Dismissal Modes Distribution")
+        st.plotly_chart(fig_dismissal, use_container_width=True)
+    
+    with col2:
+        if len(dismissal_modes) > 0:
+            dismissal_text = "**Dismissal Tendencies:**\n"
+            for mode, count in dismissal_modes.items():
+                pct = (count / dismissal_modes.sum()) * 100
+                dismissal_text += f"- {mode}: {int(count)} times ({pct:.1f}%)\n"
+            st.info(dismissal_text)
+        
+        # Most common dismisser
+        st.subheader("👹 Most Common Dismissers")
+        dismissers = player_deliveries[player_deliveries['player_dismissed'] == selected_player]['bowler'].value_counts().head(5)
+        for bowler, count in dismissers.items():
+            st.write(f"🎯 **{bowler}** - {int(count)} dismissals")
+    
+    # ===== SCORING PATTERNS =====
+    st.subheader("📊 Scoring Patterns")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # Runs by run type
+        run_types = {
+            '0s': len(player_deliveries[player_deliveries['batsman_runs'] == 0]),
+            '1s': len(player_deliveries[player_deliveries['batsman_runs'] == 1]),
+            '2s': len(player_deliveries[player_deliveries['batsman_runs'] == 2]),
+            '3s': len(player_deliveries[player_deliveries['batsman_runs'] == 3]),
+            '4s': len(player_deliveries[player_deliveries['batsman_runs'] == 4]),
+            '6s': len(player_deliveries[player_deliveries['batsman_runs'] == 6]),
+        }
+        run_types_df = pd.DataFrame(list(run_types.items()), columns=['Run Type', 'Count'])
+        
+        fig_runs_type = px.bar(run_types_df, x='Run Type', y='Count',
+                              title="Deliveries by Run Type",
+                              color='Count', color_continuous_scale='Blues')
+        st.plotly_chart(fig_runs_type, use_container_width=True)
+    
+    with col2:
+        # Percentage of runs from different sources
+        total_runs = p_runs
+        runs_from_1s = len(player_deliveries[player_deliveries['batsman_runs'] == 1]) * 1
+        runs_from_2s = len(player_deliveries[player_deliveries['batsman_runs'] == 2]) * 2
+        runs_from_4s = len(player_deliveries[player_deliveries['batsman_runs'] == 4]) * 4
+        runs_from_6s = len(player_deliveries[player_deliveries['batsman_runs'] == 6]) * 6
+        
+        runs_sources = {
+            '1s': runs_from_1s,
+            '2s': runs_from_2s,
+            '4s': runs_from_4s,
+            '6s': runs_from_6s,
+        }
+        
+        fig_runs_value = px.pie(values=list(runs_sources.values()), names=list(runs_sources.keys()),
+                               title="Total Runs by Source",
+                               hole=0.3)
+        st.plotly_chart(fig_runs_value, use_container_width=True)
+    
+    # ===== PHASE-WISE PERFORMANCE =====
+    st.subheader("🔄 Phase-wise Performance (Powerplay, Middle, Death)")
+    
+    def get_phase(over_number):
+        """Classify delivery phase"""
+        if over_number <= 6:
+            return "Powerplay (1-6)"
+        elif over_number <= 16:
+            return "Middle Overs (7-16)"
+        else:
+            return "Death Overs (17-20)"
+    
+    player_deliveries['Phase'] = player_deliveries['over'].apply(get_phase)
+    phase_stats = player_deliveries.groupby('Phase').agg({
+        'batsman_runs': ['sum', 'count', 'mean']
+    }).reset_index()
+    phase_stats.columns = ['Phase', 'Runs', 'Balls', 'Avg per Ball']
+    phase_stats['Strike Rate'] = (phase_stats['Runs'] / phase_stats['Balls'] * 100).round(2)
+    phase_stats = phase_stats[['Phase', 'Runs', 'Balls', 'Strike Rate']]
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        fig_phase = px.bar(phase_stats, x='Phase', y='Runs',
+                          title="Runs Scored in Different Phases",
+                          color='Strike Rate', color_continuous_scale='RdYlGn')
+        st.plotly_chart(fig_phase, use_container_width=True)
+    
+    with col2:
+        fig_phase_sr = px.bar(phase_stats, x='Phase', y='Strike Rate',
+                             title="Strike Rate in Different Phases",
+                             color='Strike Rate', color_continuous_scale='Viridis')
+        st.plotly_chart(fig_phase_sr, use_container_width=True)
+    
+    st.dataframe(phase_stats.round(2), use_container_width=True)
+    
+    # ===== PERFORMANCE TIMELINE =====
+    st.subheader("📅 Performance Timeline")
+    
+    # Get matches and sort by date
+    player_match_ids = player_deliveries['match_id'].unique()
+    player_matches = matches[matches['match_id'].isin(player_match_ids)][['match_id', 'date']].drop_duplicates()
+    player_matches = player_matches.sort_values('date')
+    
+    # Calculate runs per match
+    runs_per_match = player_deliveries.groupby('match_id')['batsman_runs'].sum().reset_index()
+    runs_per_match = runs_per_match.merge(player_matches, on='match_id')
+    runs_per_match['Cumulative'] = runs_per_match['batsman_runs'].cumsum()
+    runs_per_match = runs_per_match.sort_values('date')
+    
+    fig_timeline = go.Figure()
+    fig_timeline.add_trace(go.Scatter(
+        x=runs_per_match['date'], y=runs_per_match['batsman_runs'],
+        mode='markers+lines', name='Runs per Match',
+        marker=dict(size=8, color=runs_per_match['batsman_runs'], 
+                   colorscale='Viridis', showscale=True)
+    ))
+    fig_timeline.update_layout(title="Performance Timeline", height=400)
+    st.plotly_chart(fig_timeline, use_container_width=True)
+    
+    # ===== PLAYER RATING CARD =====
+    st.subheader("⭐ Overall Player Rating")
+    
+    col1, col2, col3, col4, col5 = st.columns(5)
+    
+    # Calculate ratings
+    run_rating = min(100, (p_runs / 200) * 100)  # 200 runs = 100 rating
+    avg_rating = min(100, (p_avg / 50) * 100)  # 50 average = 100 rating
+    sr_rating = min(100, (p_sr / 140) * 100)  # 140 SR = 100 rating
+    consistency_rating = consistency_score
+    
+    overall_rating = (run_rating + avg_rating + sr_rating + consistency_rating) / 4
+    
+    with col1:
+        st.metric("📊 Run Rating", f"{run_rating:.1f}%")
+    with col2:
+        st.metric("📈 Average Rating", f"{avg_rating:.1f}%")
+    with col3:
+        st.metric("⚡ Strike Rate Rating", f"{sr_rating:.1f}%")
+    with col4:
+        st.metric("🎯 Consistency Rating", f"{consistency_rating:.1f}%")
+    with col5:
+        st.metric("⭐ Overall Rating", f"{overall_rating:.1f}%")
 
 # ==================== COMPARISON WITH OTHERS ====================
 st.divider()
