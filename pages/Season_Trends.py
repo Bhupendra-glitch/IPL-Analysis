@@ -16,7 +16,15 @@ all_seasons = sorted(matches['season'].unique())
 selected_seasons = st.sidebar.multiselect("Select Seasons", all_seasons, default=all_seasons)
 
 # Filter data based on selection
+if not selected_seasons:
+    st.warning("⚠️ Please select at least one season to view data")
+    st.stop()
+
 filtered_matches = matches[matches['season'].isin(selected_seasons)]
+if len(filtered_matches) == 0:
+    st.warning("⚠️ No data available for selected seasons")
+    st.stop()
+
 filtered_deliveries = deliveries[deliveries['match_id'].isin(filtered_matches['match_id'])]
 
 # Create tabs for different analyses
