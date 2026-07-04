@@ -690,9 +690,9 @@ with tab6:
     - Reliability Index: {p_avg:.2f} (League avg: {np.mean(matrix_df['Average']):.2f})
     
     **Strengths in Different Phases:**
-    - Powerplay Specialist: {'✅ Yes' if phase_stats[phase_stats['Phase'] == 'Powerplay (1-6)']['Strike Rate'].values[0] > 120 if len(phase_stats[phase_stats['Phase'] == 'Powerplay (1-6)']) > 0 else 'N/A'}
-    - Middle Overs Anchor: {'✅ Yes' if phase_stats[phase_stats['Phase'] == 'Middle Overs (7-16)']['Strike Rate'].values[0] > 100 if len(phase_stats[phase_stats['Phase'] == 'Middle Overs (7-16)']) > 0 else 'N/A'}
-    - Finisher: {'✅ Yes' if phase_stats[phase_stats['Phase'] == 'Death Overs (17-20)']['Strike Rate'].values[0] > 130 if len(phase_stats[phase_stats['Phase'] == 'Death Overs (17-20)']) > 0 else 'N/A'}
+    - Powerplay Specialist: {'✅ Yes' if len(phase_stats[phase_stats['Phase'] == 'Powerplay (1-6)']) > 0 and phase_stats[phase_stats['Phase'] == 'Powerplay (1-6)']['Strike Rate'].values[0] > 120 else '❌ No'}
+    - Middle Overs Anchor: {'✅ Yes' if len(phase_stats[phase_stats['Phase'] == 'Middle Overs (7-16)']) > 0 and phase_stats[phase_stats['Phase'] == 'Middle Overs (7-16)']['Strike Rate'].values[0] > 100 else '❌ No'}
+    - Finisher: {'✅ Yes' if len(phase_stats[phase_stats['Phase'] == 'Death Overs (17-20)']) > 0 and phase_stats[phase_stats['Phase'] == 'Death Overs (17-20)']['Strike Rate'].values[0] > 130 else '❌ No'}
     """
     
     st.info(insight_text)
