@@ -29,7 +29,7 @@ if analysis_mode == "📊 Single Venue":
     with tab1:
         st.header(f"📍 {selected_venue} - Venue Overview")
         venue_matches = matches[matches['venue'] == selected_venue].copy()
-        venue_deliveries = deliveries[deliveries['match_id'].isin(venue_matches['match_id'])]
+        venue_deliveries = deliveries[deliveries['match_id'].isin(venue_matches['id'])]
         
         total_matches = len(venue_matches)
         unique_teams = pd.concat([venue_matches['team1'], venue_matches['team2']]).nunique()
@@ -55,7 +55,7 @@ if analysis_mode == "📊 Single Venue":
         with col1:
             st.subheader("📍 Venue Characteristics")
             league_avg_runs = matches.groupby('venue').apply(
-                lambda x: deliveries[deliveries['match_id'].isin(x['match_id'])]['total_runs'].sum() / len(x)
+                lambda x: deliveries[deliveries['match_id'].isin(x['id'])]['total_runs'].sum() / len(x)
             ).mean()
             venue_type = "🔥 High Scoring" if avg_runs_per_match > league_avg_runs * 1.1 else "🛡️ Low Scoring" if avg_runs_per_match < league_avg_runs * 0.9 else "⚖️ Neutral"
             char_text = f"""**{selected_venue}**
@@ -129,14 +129,14 @@ if analysis_mode == "📊 Single Venue":
     with tab3:
         st.header(f"🏏 {selected_venue} - Batting Trends")
         venue_matches = matches[matches['venue'] == selected_venue]
-        venue_deliveries = deliveries[deliveries['match_id'].isin(venue_matches['match_id'])]
+        venue_deliveries = deliveries[deliveries['match_id'].isin(venue_matches['id'])]
         
         col1, col2 = st.columns(2)
         with col1:
             st.subheader("📊 Overall Strike Rate Trend")
             sr_by_season = []
             for season in venue_matches['season'].unique():
-                season_matches = venue_matches[venue_matches['season'] == season]['match_id']
+                season_matches = venue_matches[venue_matches['season'] == season]['id']
                 season_del = venue_deliveries[venue_deliveries['match_id'].isin(season_matches)]
                 total_runs = season_del['batsman_runs'].sum()
                 total_balls = len(season_del)
@@ -190,7 +190,7 @@ if analysis_mode == "📊 Single Venue":
     with tab4:
         st.header(f"📈 {selected_venue} - Match Statistics")
         venue_matches = matches[matches['venue'] == selected_venue]
-        venue_deliveries = deliveries[deliveries['match_id'].isin(venue_matches['match_id'])]
+        venue_deliveries = deliveries[deliveries['match_id'].isin(venue_matches['id'])]
         
         col1, col2, col3 = st.columns(3)
         with col1:
@@ -224,7 +224,7 @@ if analysis_mode == "📊 Single Venue":
     with tab5:
         st.header(f"👑 {selected_venue} - Player Statistics")
         venue_matches = matches[matches['venue'] == selected_venue]
-        venue_deliveries = deliveries[deliveries['match_id'].isin(venue_matches['match_id'])]
+        venue_deliveries = deliveries[deliveries['match_id'].isin(venue_matches['id'])]
         
         col1, col2, col3 = st.columns(3)
         with col1:
@@ -249,7 +249,7 @@ if analysis_mode == "📊 Single Venue":
     with tab6:
         st.header(f"🔍 {selected_venue} - Key Insights")
         venue_matches = matches[matches['venue'] == selected_venue]
-        venue_deliveries = deliveries[deliveries['match_id'].isin(venue_matches['match_id'])]
+        venue_deliveries = deliveries[deliveries['match_id'].isin(venue_matches['id'])]
         
         avg_runs = venue_deliveries['total_runs'].sum() / len(venue_matches) if len(venue_matches) > 0 else 0
         avg_wickets = venue_deliveries['is_wicket'].sum() / len(venue_matches)
@@ -258,7 +258,7 @@ if analysis_mode == "📊 Single Venue":
         with col1:
             st.subheader("📊 Venue Characteristics")
             league_avg = deliveries.groupby(deliveries['match_id'].map(
-                matches.set_index('match_id')['venue'].to_dict())).apply(lambda x: x['total_runs'].sum()).mean()
+                matches.set_index('id')['venue'].to_dict())).apply(lambda x: x['total_runs'].sum()).mean()
             batting_friendly = avg_runs > league_avg * 1.1
             insights = f"""**Venue Analysis:**
 - **Overall Score:** {avg_runs:.0f} runs/match
@@ -296,7 +296,7 @@ elif analysis_mode == "🔄 Compare Venues":
         comparison_data = []
         for venue in selected_venues:
             venue_matches = matches[matches['venue'] == venue]
-            venue_deliveries = deliveries[deliveries['match_id'].isin(venue_matches['match_id'])]
+            venue_deliveries = deliveries[deliveries['match_id'].isin(venue_matches['id'])]
             total_matches = len(venue_matches)
             total_runs = venue_deliveries['total_runs'].sum()
             avg_runs = total_runs / total_matches if total_matches > 0 else 0
@@ -355,7 +355,7 @@ elif analysis_mode == "🌍 All Venues Overview":
     all_venue_data = []
     for venue in all_venues:
         venue_matches = matches[matches['venue'] == venue]
-        venue_deliveries = deliveries[deliveries['match_id'].isin(venue_matches['match_id'])]
+        venue_deliveries = deliveries[deliveries['match_id'].isin(venue_matches['id'])]
         total_matches = len(venue_matches)
         total_runs = venue_deliveries['total_runs'].sum()
         avg_runs = total_runs / total_matches if total_matches > 0 else 0
