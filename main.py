@@ -237,16 +237,23 @@ st.markdown("## 🧭 Navigation Guide")
 
 st.markdown("""
 <div class="feature-card">
-    <p>Use the sidebar to navigate through different sections of the dashboard:</p>
+    <p><strong>Recommended flow:</strong></p>
     <ul>
-        <li><strong>🏠 Home:</strong> Project overview and key metrics</li>
-        <li><strong>📊 Overview:</strong> Dataset summary and basic statistics</li>
-        <li><strong>📈 EDA Dashboard:</strong> Exploratory data analysis with visualizations</li>
-        <li><strong>🏏 Team Analysis:</strong> Team performance and comparisons</li>
-        <li><strong>👤 Player Analysis:</strong> Individual player statistics</li>
-        <li><strong>🤖 ML Predictions:</strong> Machine learning based predictions</li>
-        <li><strong>📌 Insights:</strong> Key findings and conclusions</li>
-        <li><strong>📥 Export Reports:</strong> Download analysis results and data</li>
+        <li><strong>1. Overview</strong></li>
+        <li><strong>2. Analysis Your Data</strong></li>
+        <li><strong>3. Dataset Preprocessing</strong></li>
+        <li><strong>4. EDA Dashboard</strong></li>
+        <li><strong>5. Player Analysis</strong></li>
+        <li><strong>6. Team Analysis</strong></li>
+        <li><strong>7. Performance</strong></li>
+        <li><strong>8. Season Trends</strong></li>
+        <li><strong>9. Venue Analysis</strong></li>
+        <li><strong>10. Head to Head</strong></li>
+        <li><strong>11. Fantasy Team</strong></li>
+        <li><strong>12. Live Match Predictor</strong></li>
+        <li><strong>13. ML Predictions</strong></li>
+        <li><strong>14. Insights</strong></li>
+        <li><strong>15. Export</strong></li>
     </ul>
 </div>
 """, unsafe_allow_html=True)
