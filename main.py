@@ -69,14 +69,20 @@ def load_data():
 
 matches, deliveries = load_data()
 
+total_runs = int(deliveries["total_runs"].sum())
+team_count = len(pd.unique(pd.concat([matches["team1"], matches["team2"]]).dropna()))
+season_count = matches["season"].nunique()
+season_start = matches["season"].min()
+season_end = matches["season"].max()
+
 # Main header
 st.markdown('<h1 class="main-header">🏏 IPL Cricket Analytics Dashboard</h1>', unsafe_allow_html=True)
 
 # Subtitle
-st.markdown("""
+st.markdown(f"""
 <div style="text-align: center; font-size: 1.2rem; margin-bottom: 2rem; color: #666;">
     <strong>End-to-End Machine Learning Analysis of Indian Premier League Cricket Data</strong><br>
-    From 2008 to 2024 • Ball-by-ball insights • Predictive analytics • Fantasy sports optimization
+    Seasons {season_start} to {season_end} • Ball-by-ball insights • Predictive analytics • Fantasy sports optimization
 </div>
 """, unsafe_allow_html=True)
 
@@ -96,24 +102,24 @@ with col1:
 with col2:
     st.markdown(f"""
     <div class="metric-card">
-        <h3>{len(matches['team1'].unique())}</h3>
-        <p>Teams</p>
+        <h3>{total_runs:,}</h3>
+        <p>Total Runs</p>
     </div>
     """, unsafe_allow_html=True)
 
 with col3:
     st.markdown(f"""
     <div class="metric-card">
-        <h3>{len(matches['season'].unique())}</h3>
-        <p>Seasons</p>
+        <h3>{team_count}</h3>
+        <p>Teams</p>
     </div>
     """, unsafe_allow_html=True)
 
 with col4:
     st.markdown(f"""
     <div class="metric-card">
-        <h3>{len(deliveries):,}</h3>
-        <p>Deliveries</p>
+        <h3>{season_count}</h3>
+        <p>Seasons</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -218,10 +224,13 @@ with col2:
 
 with col3:
     # Highest scoring venue
-    avg_scores = matches.groupby('venue')['target_runs'].mean().dropna()
+    venue_match_ids = matches[['id', 'venue']].dropna()
+    venue_runs = deliveries.groupby('match_id')['total_runs'].sum().rename('match_runs').reset_index()
+    venue_scores = venue_match_ids.merge(venue_runs, left_on='id', right_on='match_id')
+    avg_scores = venue_scores.groupby('venue')['match_runs'].mean().dropna()
     top_venue = avg_scores.idxmax()
     avg_score = avg_scores.max()
-    st.metric("Highest Scoring Venue", f"{top_venue[:20]}...", f"{avg_score:.0f} avg runs")
+    st.metric("Highest Scoring Venue", top_venue[:20], f"{avg_score:.0f} avg runs")
 
 # Navigation guide
 st.markdown("## 🧭 Navigation Guide")
