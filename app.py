@@ -32,19 +32,20 @@ st.sidebar.title("🏏 IPL Dashboard")
 page = st.sidebar.radio("Navigate", [
     "🏠 Home",
     "📊 Overview",
-    "📂 Dataset & Preprocessing",
+    "📂 Analysis Your Data",
+    "🧹 Dataset Preprocessing",
     "📈 EDA Dashboard",
-    "🏏 Team Analysis",
     "👤 Player Analysis",
-    "⚔️ Head-to-Head",
-    "📍 Venue Analysis",
+    "🏏 Team Analysis",
+    "⚡ Performance",
     "📅 Season Trends",
-    "🤖 ML Predictions",
-    "📊 Live Match Predictor",
+    "📍 Venue Analysis",
+    "⚔️ Head to Head",
     "🎯 Fantasy Team Generator",
-    "⚡ Performance Optimization",
+    "📊 Live Match Predictor",
+    "🤖 ML Predictions",
     "📌 Insights",
-    "📥 Export Reports"
+    "📥 Export"
 ])
 
 # ---------------- HOME ----------------
@@ -116,7 +117,12 @@ elif page == "📊 Overview":
     st.metric("Total Deliveries", len(deliveries))
 
 # ---------------- DATASET ----------------
-elif page == "📂 Dataset & Preprocessing":
+elif page == "📂 Analysis Your Data":
+    st.title("Analysis Your Data")
+    st.info("Use the Analysis Your Data page from the multipage menu to upload and analyze a custom dataset.")
+
+# ---------------- DATASET PREPROCESSING ----------------
+elif page == "🧹 Dataset Preprocessing":
     st.title("Dataset Info")
     st.write(matches.head())
     st.write(matches.isnull().sum())
@@ -154,7 +160,7 @@ elif page == "👤 Player Analysis":
     st.bar_chart(top)
 
 # ---------------- HEAD TO HEAD ----------------
-elif page == "⚔️ Head-to-Head":
+elif page == "⚔️ Head to Head":
     st.title("Head to Head")
     teams = matches['team1'].dropna().unique()
 
@@ -214,7 +220,7 @@ elif page == "🎯 Fantasy Team Generator":
     st.write(top)
 
 # ---------------- PERFORMANCE ----------------
-elif page == "⚡ Performance Optimization":
+elif page == "⚡ Performance":
     st.title("Optimization")
     st.write("Using caching and optimized queries")
 
@@ -228,7 +234,7 @@ elif page == "📌 Insights":
     """)
 
 # ---------------- EXPORT ----------------
-elif page == "📥 Export Reports":
+elif page == "📥 Export":
     st.title("Download Data")
 
     csv = matches.to_csv(index=False).encode('utf-8')
