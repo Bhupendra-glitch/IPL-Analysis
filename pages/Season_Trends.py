@@ -70,8 +70,7 @@ with tab1:
         fig_matches = px.bar(season_data, x='season', y='Matches',
                             title="Matches per Season",
                             color='Matches',
-                            color_continuous_scale='Blues',
-                            markers=False)
+                            color_continuous_scale='Blues')
         fig_matches.update_layout(height=400)
         st.plotly_chart(fig_matches, use_container_width=True)
     
