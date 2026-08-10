@@ -1,7 +1,7 @@
-streamlit==1.33.0
-pandas==2.2.2
+streamlit==1.49.1
+pandas==2.2.3
 numpy==1.26.4
-plotly==5.20.0
+plotly==6.3.0
 scikit-learn==1.4.2
 xgboost==2.0.3        # For better ML models
 matplotlib==3.8.4     # Extra plotting
