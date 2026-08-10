@@ -46,7 +46,7 @@ with tab1:
     
     # Calculate runs per season
     runs_per_season = filtered_deliveries.groupby(filtered_deliveries['match_id'].map(
-        filtered_matches.set_index('match_id')['season'].to_dict()
+        filtered_matches.set_index('id')['season'].to_dict()
     ))['total_runs'].sum().groupby(level=0).sum().reset_index()
     runs_per_season.columns = ['season', 'Total Runs']
     
@@ -133,7 +133,7 @@ with tab3:
     # Calculate batting stats per season
     batting_by_season = []
     for season in selected_seasons:
-        season_matches = filtered_matches[filtered_matches['season'] == season]['match_id']
+        season_matches = filtered_matches[filtered_matches['season'] == season]['id']
         season_deliveries = filtered_deliveries[filtered_deliveries['match_id'].isin(season_matches)]
         
         total_runs = season_deliveries['batsman_runs'].sum()
@@ -181,7 +181,7 @@ with tab3:
     st.subheader("⭐ Top Batsmen per Season")
     top_batsmen_season = []
     for season in selected_seasons:
-        season_matches = filtered_matches[filtered_matches['season'] == season]['match_id']
+        season_matches = filtered_matches[filtered_matches['season'] == season]['id']
         season_deliveries = filtered_deliveries[filtered_deliveries['match_id'].isin(season_matches)]
         
         top_batter = season_deliveries.groupby('batter')['batsman_runs'].sum().nlargest(1)
