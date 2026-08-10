@@ -1,9 +1,9 @@
 streamlit==1.49.1
 pandas==2.2.3
-numpy==1.26.4
+numpy>=2.1.0
 plotly==6.3.0
-scikit-learn==1.4.2
-xgboost==2.0.3        # For better ML models
-matplotlib==3.8.4     # Extra plotting
+scikit-learn>=1.5.0
+xgboost>=2.1.0         # For better ML models
+matplotlib>=3.9.0      # Extra plotting
 seaborn==0.13.2       # Statistical visualization
 joblib==1.4.2         # Save/load ML models
