@@ -25,7 +25,7 @@ if len(filtered_matches) == 0:
     st.warning("⚠️ No data available for selected seasons")
     st.stop()
 
-filtered_deliveries = deliveries[deliveries['match_id'].isin(filtered_matches['match_id'])]
+filtered_deliveries = deliveries[deliveries['match_id'].isin(filtered_matches['id'])]
 
 # Create tabs for different analyses
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
