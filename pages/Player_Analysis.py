@@ -194,13 +194,13 @@ with tab4:
     player_deliveries = deliveries[deliveries['batter'] == selected_player]
     
     # Get venue from matches
-    player_matches = matches[matches['match_id'].isin(player_deliveries['match_id'].unique())]
+    player_matches = matches[matches['id'].isin(player_deliveries['match_id'].unique())]
     
     # Merge venue info with player stats
     venue_stats = []
     for idx, row in player_matches.iterrows():
         venue = row['venue']
-        match_id = row['match_id']
+        match_id = row['id']
         match_runs = player_deliveries[player_deliveries['match_id'] == match_id]['batsman_runs'].sum()
         venue_stats.append({'venue': venue, 'match_id': match_id, 'runs': match_runs})
     
@@ -530,7 +530,7 @@ with tab6:
     
     # Get matches and sort by date
     player_match_ids = player_deliveries['match_id'].unique()
-    player_matches = matches[matches['match_id'].isin(player_match_ids)][['match_id', 'date']].drop_duplicates()
+    player_matches = matches[matches['id'].isin(player_match_ids)][['id', 'date']].rename(columns={'id': 'match_id'}).drop_duplicates()
     player_matches = player_matches.sort_values('date')
     
     # Calculate runs per match
