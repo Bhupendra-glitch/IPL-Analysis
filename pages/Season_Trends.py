@@ -1,9 +1,14 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
 import numpy as np
 from utils import load_data
+
+try:
+    import plotly.express as px
+    import plotly.graph_objects as go
+except ModuleNotFoundError as error:
+    st.error(f"Plotly is not installed. Add plotly to requirements.txt and redeploy. Details: {error}")
+    st.stop()
 
 st.set_page_config(layout="wide")
 st.title("📅 Season Trends Analytics")
