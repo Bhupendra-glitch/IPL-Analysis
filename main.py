@@ -72,17 +72,15 @@ matches, deliveries = load_data()
 total_runs = int(deliveries["total_runs"].sum())
 team_count = len(pd.unique(pd.concat([matches["team1"], matches["team2"]]).dropna()))
 season_count = matches["season"].nunique()
-season_start = matches["season"].min()
-season_end = matches["season"].max()
 
 # Main header
 st.markdown('<h1 class="main-header">🏏 IPL Cricket Analytics Dashboard</h1>', unsafe_allow_html=True)
 
-# Subtitle
-st.markdown(f"""
+# Dataset summary
+st.markdown("""
 <div style="text-align: center; font-size: 1.2rem; margin-bottom: 2rem; color: #666;">
-    <strong>End-to-End Machine Learning Analysis of Indian Premier League Cricket Data</strong><br>
-    Seasons {season_start} to {season_end} • Ball-by-ball insights • Predictive analytics • Fantasy sports optimization
+    <strong>Welcome to the Comprehensive IPL Analytics Platform</strong><br>
+    Explore match, team, season, and ball-by-ball delivery data.
 </div>
 """, unsafe_allow_html=True)
 
@@ -102,16 +100,16 @@ with col1:
 with col2:
     st.markdown(f"""
     <div class="metric-card">
-        <h3>{total_runs:,}</h3>
-        <p>Total Runs</p>
+        <h3>{team_count}</h3>
+        <p>Total Teams</p>
     </div>
     """, unsafe_allow_html=True)
 
 with col3:
     st.markdown(f"""
     <div class="metric-card">
-        <h3>{team_count}</h3>
-        <p>Teams</p>
+        <h3>{len(deliveries):,}</h3>
+        <p>Total Deliveries</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -119,9 +117,12 @@ with col4:
     st.markdown(f"""
     <div class="metric-card">
         <h3>{season_count}</h3>
-        <p>Seasons</p>
+        <p>Seasons Covered</p>
     </div>
     """, unsafe_allow_html=True)
+
+st.markdown("### Sample Data")
+st.dataframe(matches.head())
 
 # Project description
 st.markdown("## 🎯 About This Project")
