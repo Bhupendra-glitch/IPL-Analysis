@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 from pathlib import Path
-import time
 
 # Set page configuration
 st.set_page_config(
@@ -69,10 +68,6 @@ def load_data():
 
 matches, deliveries = load_data()
 
-total_runs = int(deliveries["total_runs"].sum())
-team_count = len(pd.unique(pd.concat([matches["team1"], matches["team2"]]).dropna()))
-season_count = matches["season"].nunique()
-
 # Main header
 st.markdown('<h1 class="main-header">🏏 IPL Cricket Analytics Dashboard</h1>', unsafe_allow_html=True)
 
@@ -83,46 +78,6 @@ st.markdown("""
     Explore match, team, season, and ball-by-ball delivery data.
 </div>
 """, unsafe_allow_html=True)
-
-# Key metrics in a beautiful layout
-st.markdown("## 📊 Dashboard Overview")
-
-col1, col2, col3, col4 = st.columns(4)
-
-with col1:
-    st.markdown(f"""
-    <div class="metric-card">
-        <h3>{len(matches):,}</h3>
-        <p>Total Matches</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-with col2:
-    st.markdown(f"""
-    <div class="metric-card">
-        <h3>{team_count}</h3>
-        <p>Total Teams</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-with col3:
-    st.markdown(f"""
-    <div class="metric-card">
-        <h3>{len(deliveries):,}</h3>
-        <p>Total Deliveries</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-with col4:
-    st.markdown(f"""
-    <div class="metric-card">
-        <h3>{season_count}</h3>
-        <p>Seasons Covered</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-st.markdown("### Sample Data")
-st.dataframe(matches.head())
 
 # Project description
 st.markdown("## 🎯 About This Project")
@@ -206,33 +161,6 @@ for i, feature in enumerate(features):
         </div>
         """, unsafe_allow_html=True)
 
-# Quick insights section
-st.markdown("## 🔍 Quick Insights")
-
-col1, col2, col3 = st.columns(3)
-
-with col1:
-    # Top run scorer
-    top_batsman = deliveries.groupby('batter')['batsman_runs'].sum().idxmax()
-    top_runs = deliveries.groupby('batter')['batsman_runs'].sum().max()
-    st.metric("Top Run Scorer", f"{top_batsman}", f"{top_runs:,} runs")
-
-with col2:
-    # Most successful team
-    most_wins = matches['winner'].value_counts().idxmax()
-    win_count = matches['winner'].value_counts().max()
-    st.metric("Most Successful Team", f"{most_wins}", f"{win_count} wins")
-
-with col3:
-    # Highest scoring venue
-    venue_match_ids = matches[['id', 'venue']].dropna()
-    venue_runs = deliveries.groupby('match_id')['total_runs'].sum().rename('match_runs').reset_index()
-    venue_scores = venue_match_ids.merge(venue_runs, left_on='id', right_on='match_id')
-    avg_scores = venue_scores.groupby('venue')['match_runs'].mean().dropna()
-    top_venue = avg_scores.idxmax()
-    avg_score = avg_scores.max()
-    st.metric("Highest Scoring Venue", top_venue[:20], f"{avg_score:.0f} avg runs")
-
 # Navigation guide
 st.markdown("## 🧭 Navigation Guide")
 
@@ -272,10 +200,4 @@ with col2:
     </div>
     """, unsafe_allow_html=True)
 
-# Add some animation/loading effect
-if st.button("🚀 Start Exploring", type="primary"):
-    with st.spinner("Loading dashboard..."):
-        time.sleep(1)
-    st.success("Dashboard ready! Use the sidebar to navigate.")
-    st.balloons()
 
