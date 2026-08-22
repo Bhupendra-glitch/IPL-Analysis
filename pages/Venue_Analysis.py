@@ -1,4 +1,4 @@
-Plotly is not installed. Add plotly to requirements.txt and redeploy. Details: No module named 'plotly'import streamlit as st
+import streamlit as st
 import pandas as pd
 import numpy as np
 from utils import load_data
