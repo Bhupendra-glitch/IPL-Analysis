@@ -39,20 +39,30 @@ with tab1:
     # Calculate stats
     total_matches = len(team_matches)
     wins = len(team_matches[team_matches['winner'] == selected_team])
-    losses = total_matches - wins
+    losses = len(team_matches[
+        team_matches['winner'].notna() &
+        (team_matches['winner'] != '') &
+        (team_matches['winner'] != selected_team)
+    ])
+    no_results = total_matches - wins - losses
     win_percentage = (wins / total_matches * 100) if total_matches > 0 else 0
     
-    # Get runs scored
-    team_batting_matches = team_matches[team_matches['team1'] == selected_team]['match_id'].tolist()
-    team_runs_scored = deliveries[
-        (deliveries['match_id'].isin(team_batting_matches))
-    ]['batsman_runs'].sum()
+    # Use the delivery team fields so team2 innings are included correctly.
+    team_batting_deliveries = deliveries[deliveries['batting_team'] == selected_team]
+    team_bowling_deliveries = deliveries[deliveries['bowling_team'] == selected_team]
+    team_runs_scored = team_batting_deliveries['total_runs'].sum()
+    runs_conceded = team_bowling_deliveries['total_runs'].sum()
     
     # Calculate average runs per match
     avg_runs_for = team_runs_scored / total_matches if total_matches > 0 else 0
+    avg_runs_against = runs_conceded / total_matches if total_matches > 0 else 0
+    recent_results = team_matches['winner'].tail(5).apply(
+        lambda winner: 'W' if winner == selected_team else 'L' if pd.notna(winner) and winner != '' else 'NR'
+    ).tolist()
+    recent_form = ' - '.join(recent_results) if recent_results else 'N/A'
     
     # KPI Cards
-    col1, col2, col3, col4, col5 = st.columns(5)
+    col1, col2, col3, col4, col5, col6 = st.columns(6)
     with col1:
         st.metric("🎯 Total Matches", total_matches)
     with col2:
@@ -62,7 +72,11 @@ with tab1:
     with col4:
         st.metric("📊 Win %", f"{win_percentage:.1f}%")
     with col5:
-        st.metric("📈 Avg Runs", f"{avg_runs_for:.0f}")
+        st.metric("📈 Avg For", f"{avg_runs_for:.0f}")
+    with col6:
+        st.metric("📉 Avg Against", f"{avg_runs_against:.0f}")
+
+    st.caption(f"Recent form (oldest to newest): {recent_form} | No results: {no_results}")
     
     # Recent form
     st.subheader("📋 Recent Matches (Last 10)")
@@ -91,11 +105,13 @@ with tab1:
         - **Total Matches:** {total_matches}
         - **Wins:** {wins}
         - **Losses:** {losses}
+        - **No Results:** {no_results}
         - **Win Rate:** {win_percentage:.2f}%
         - **Current Form:** {"🔥 Good" if win_percentage > 50 else "⚠️ Average" if win_percentage > 33 else "❌ Poor"}
         
         **Batting Performance:**
         - Avg Runs/Match: {avg_runs_for:.0f}
+        - Avg Runs Conceded/Match: {avg_runs_against:.0f}
         - Seasons Played: {team_matches['season'].nunique()}
         """
         st.info(summary_text)
@@ -145,11 +161,12 @@ with tab2:
     runs_by_season = []
     for season in team_matches['season'].unique():
         season_data = team_matches[team_matches['season'] == season]
-        season_matches_ids = season_data[season_data['team1'] == selected_team]['match_id'].tolist()
-        
-        # Get runs for this team
+        season_match_ids = season_data['id'].tolist()
+
+        # Get only the selected team's batting innings for this season.
         team_runs = deliveries[
-            (deliveries['match_id'].isin(season_matches_ids))
+            deliveries['match_id'].isin(season_match_ids) &
+            (deliveries['batting_team'] == selected_team)
         ]['total_runs'].sum()
         
         total_runs = team_runs
@@ -240,7 +257,7 @@ with tab4:
     st.header(f"👥 {selected_team} - Squad Analysis")
     
     team_matches = matches[(matches['team1'] == selected_team) | (matches['team2'] == selected_team)].copy()
-    team_match_ids = team_matches[team_matches['team1'] == selected_team]['match_id'].tolist()
+    team_match_ids = team_matches['id'].tolist()
     team_deliveries = deliveries[deliveries['match_id'].isin(team_match_ids)]
     
     col1, col2, col3 = st.columns(3)
@@ -248,7 +265,7 @@ with tab4:
     # Top batsmen
     with col1:
         st.subheader("🏏 Top Batsmen")
-        top_batsmen = team_deliveries.groupby('batter')['batsman_runs'].sum().nlargest(10).reset_index()
+        top_batsmen = team_deliveries[team_deliveries['batting_team'] == selected_team].groupby('batter')['batsman_runs'].sum().nlargest(10).reset_index()
         top_batsmen.columns = ['Player', 'Runs']
         
         fig_bat = px.bar(top_batsmen, x='Player', y='Runs',
@@ -261,7 +278,10 @@ with tab4:
     # Top bowlers
     with col2:
         st.subheader("🎯 Top Bowlers")
-        top_bowlers = team_deliveries[team_deliveries['is_wicket'] == 1].groupby('bowler').size().nlargest(10).reset_index(name='Wickets')
+        top_bowlers = team_deliveries[
+            (team_deliveries['bowling_team'] == selected_team) &
+            (team_deliveries['is_wicket'] == 1)
+        ].groupby('bowler').size().nlargest(10).reset_index(name='Wickets')
         
         fig_bowl = px.bar(top_bowlers, x='bowler', y='Wickets',
                          title="Top 10 Wicket-Takers",
@@ -289,7 +309,7 @@ with tab4:
     
     # Detailed squad stats
     st.subheader("📋 Batting Statistics")
-    batting_stats = team_deliveries.groupby('batter').agg({
+    batting_stats = team_deliveries[team_deliveries['batting_team'] == selected_team].groupby('batter').agg({
         'batsman_runs': ['sum', 'count', 'mean'],
     }).reset_index()
     batting_stats.columns = ['Player', 'Runs', 'Balls', 'Avg per Ball']
@@ -352,8 +372,11 @@ with tab6:
     st.header(f"📉 {selected_team} - Match Patterns & Analysis")
     
     team_matches = matches[(matches['team1'] == selected_team) | (matches['team2'] == selected_team)].copy()
-    team_match_ids = team_matches[team_matches['team1'] == selected_team]['match_id'].tolist()
-    team_deliveries = deliveries[deliveries['match_id'].isin(team_match_ids)]
+    team_match_ids = team_matches['id'].tolist()
+    team_deliveries = deliveries[
+        deliveries['match_id'].isin(team_match_ids) &
+        (deliveries['batting_team'] == selected_team)
+    ]
     
     col1, col2 = st.columns(2)
     
