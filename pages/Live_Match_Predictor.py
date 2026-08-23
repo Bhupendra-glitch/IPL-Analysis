@@ -71,7 +71,8 @@ with col1:
         st.metric("Balls Remaining", balls_remaining)
         if runs_needed:
             st.metric("Runs Needed", max(0, runs_needed))
-        st.metric("Run Rate", f"{current_score/overs_completed:.2f}" if overs_completed > 0 else "0.00")
+        current_rr = current_score / overs_completed if overs_completed > 0 else 0
+        st.metric("Run Rate", f"{current_rr:.2f}")
 
     # Calculate win probability
     if st.button("🔮 Calculate Win Probability", type="primary", use_container_width=True):
@@ -98,7 +99,6 @@ with col1:
             balls_bowled = int(overs_completed * 6)
             balls_remaining = int((total_overs - overs_completed) * 6)
 
-            current_rr = current_score / overs_completed if overs_completed > 0 else 0
             required_rr = (target_runs - current_score) / (total_overs - overs_completed) if is_chase and target_runs and overs_completed < total_overs else 0
 
             # Win probability calculation (simplified logistic model)
@@ -250,13 +250,20 @@ with col_sim1:
 
 with col_sim2:
     if st.button("🎯 Death Overs Analysis"):
-        death_overs_remaining = max(0, total_overs - overs_completed - 12)
-        if death_overs_remaining <= 4:
-            death_rr_needed = (target_runs - current_score) / death_overs_remaining if is_chase and death_overs_remaining > 0 else 0
-            st.metric("Death Overs RR Needed", f"{death_rr_needed:.2f}")
+        death_over_start = max(0, total_overs - 4)
+        death_overs_remaining = max(0, total_overs - max(overs_completed, death_over_start))
+        if overs_completed >= death_over_start:
+            if is_chase and target_runs:
+                death_rr_needed = ((target_runs - current_score) / death_overs_remaining
+                                   if death_overs_remaining > 0 else 0)
+                st.metric("Death Overs RR Needed", f"{max(0, death_rr_needed):.2f}")
+            else:
+                death_runs_projection = current_rr * death_overs_remaining
+                st.metric("Projected Death Overs Runs", f"{death_runs_projection:.0f}")
+            st.metric("Death Overs Remaining", f"{death_overs_remaining:.1f}")
             st.info("High pressure situation!")
         else:
-            st.info("Death overs not yet reached")
+            st.info(f"Death overs start at over {death_over_start:.0f}")
 
 with col_sim3:
     if st.button("📊 Match Statistics"):
